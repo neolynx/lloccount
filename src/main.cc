@@ -18,7 +18,7 @@
 
 #include "stats.h"
 
-std::map<int, Stats> stats;
+std::map<int, Stats *> stats;
 
 void printDecl( CXCursor c )
 {
@@ -26,6 +26,9 @@ void printDecl( CXCursor c )
   const char *name = clang_getCString( n );
   CXString t       = clang_getDeclObjCTypeEncoding( c );
   const char *type = clang_getCString( t );
+  if( !name ) name = "Unknown";
+  if( !type ) type = "Unknown";
+  std::cout << name << ": " << type << std::endl;
   clang_disposeString( n );
   clang_disposeString( t );
 }
@@ -54,11 +57,11 @@ CXChildVisitResult statsVisitor( CXCursor cursor, CXCursor parent, CXClientData 
   //FIXME: verify kind exists in stats
   if( file == filename )
   {
-    stats[cursor.kind].count++;
-    stats[stats[cursor.kind].category].count++;
+    stats[cursor.kind]->count++;
+    stats[stats[cursor.kind]->category]->count++;
+    //std::cout << file << std::endl;
+    //printDecl( cursor );
   }
-  //std::cout << file << std::endl;
-  //printDecl( c );
   return CXChildVisit_Recurse;
 }
 
@@ -95,12 +98,22 @@ int main(int argc, char** argv)
 
   clang_visitChildren( clang_getTranslationUnitCursor( u ), statsVisitor, NULL );
 
-  for( size_t i = 0; i < stats.size( ); i++ )
+  for( std::map<int, Stats *>::iterator it = stats.begin( ); it != stats.end( ); it++ )
   {
-    if (stats[i].name == NULL || stats[i].count == 0 )
+    if (it->second->name == NULL || it->second->count == 0 )
       continue;
-    std::cout << stats[i].name << ": " << stats[i].count << std::endl;
+    if( it->first == Stats::Cat_Misc )
+      std::cout << std::endl;
+    std::cout << it->second->name << ": " << it->second->count << std::endl;
   }
+  std::cout << std::endl;
+  std::cout << "Total LLOC: " << ( stats[ Stats::Cat_Declaration ]->count +
+                                   stats[ Stats::Cat_Statement ]->count +
+                                   stats[ Stats::Cat_Loop ]->count +
+                                   stats[ Stats::Cat_Condition ]->count +
+                                   stats[ Stats::Cat_Function ]->count +
+                                   stats[ Stats::Cat_Call ]->count
+                                   ) << std::endl;
 
   return 0;
 }
