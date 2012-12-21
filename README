@@ -3,11 +3,19 @@ lloccount
 
 C/C++ Logical Lines Of Code Counter
 
+
+Dependencies
+------------
+
+apt-get install libclang-dev
+
+
 Get Source
 ----------
 
 git clone https://github.com/neolynx/lloccount.git
 cd lloccount
+
 
 Build
 -----
@@ -15,6 +23,7 @@ Build
 autoreconf -i
 ./configure
 make
+
 
 Try
 ---
